@@ -86,10 +86,12 @@ class RobotExecuter implements IExecuter
 
 class FileExecuter implements IExecuter
 {
+    String filename;
     FileWriter out = null;
 
     public FileExecuter(String filename)
     {
+        this.filename = filename;
         try
         {
             out = new FileWriter(filename);
@@ -117,6 +119,7 @@ class FileExecuter implements IExecuter
         try
         {
             out.close();
+            println("Output written to " + filename);
         } catch (Exception e)
         {
             e.printStackTrace();
