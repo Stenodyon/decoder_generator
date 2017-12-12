@@ -103,13 +103,13 @@ void parseModules(String[] lines)
             switch(c)
             {
                 case '0':
-                    modules[height - 1 - lineIndex][width - 1 - moduleIndex] = 2;
+                    modules[lineIndex][width - 1 - moduleIndex] = 2;
                     break;
                 case '1':
-                    modules[height - 1 - lineIndex][width - 1 - moduleIndex] = 1;
+                    modules[lineIndex][width - 1 - moduleIndex] = 1;
                     break;
                 case 'X':
-                    modules[height - 1 - lineIndex][width - 1 - moduleIndex] = 0;
+                    modules[lineIndex][width - 1 - moduleIndex] = 0;
                     break;
                 default:
                     println("Parse error: unexpected '" + (char)c + "'");
