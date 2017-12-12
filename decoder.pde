@@ -31,7 +31,7 @@ void setup() {
     {
         e.printStackTrace();
     }
-    size(600, 400);
+    size(0, 0);
     selectInput("Select a file to process:", "fileSelected");
 }
 
@@ -147,15 +147,34 @@ void solveModules()
     }
 }
 
-void buildOutput()
+void buildOutputLane(int Y)
 {
     int length = modules[0].length * 2;
-    for(int y = 0; y < modules.length; y++)
+    fillBlocks(length + 2, -4, Y + 1, 2, -4, Y + 1, block);
+    fillBlocks(length + 2, -3, Y + 1, 2, -3, Y + 1, redstone);
+    setBlock(1, -4, Y + 1, torch, 2);
+}
+
+void copyOutputLanes(int count, int Y)
+{
+    int length = modules[0].length * 2;
+    int depth = count * 2 - 1;
+    cloneBlocks(length + 2, -4, 2, 1, -3, 2 + depth, 1, -4, Y);
+}
+
+void buildOutput()
+{
+    buildOutputLane(2);
+    int availableLanes = 1;
+    int leftToBuild = modules.length - 1;
+    int y = 1;
+    while(leftToBuild > 0)
     {
-        int Y = y * 2 + 2;
-        fillBlocks(length + 2, -4, Y + 1, 2, -4, Y + 1, block);
-        fillBlocks(length + 2, -3, Y + 1, 2, -3, Y + 1, redstone);
-        setBlock(1, -4, Y + 1, torch, 2);
+        int toCopy = min(availableLanes, leftToBuild);
+        copyOutputLanes(toCopy, y * 2 + 2);
+        availableLanes += toCopy;
+        leftToBuild -= toCopy;
+        y += toCopy;
         println("Built output lane " + (y+1) + " of " + modules.length);
     }
 }
@@ -195,10 +214,6 @@ void buildModule3(int x, int y)
     setBlock(X + 1, -4, Y, block);
     setBlock(X + 1, -3, Y, repeater, 1);
     setBlock(X + 2, -3, Y, block);
-    setBlock(X + 2, -4, Y - 1, block);
-    setBlock(X + 2, -4, Y + 1, block);
-    setBlock(X + 2, -3, Y - 1, redstone);
-    setBlock(X + 2, -3, Y + 1, redstone);
 }
 
 void buildModule4(int x, int y)
@@ -255,8 +270,41 @@ void buildModule7(int x, int y)
     setBlock(X, -1, Y + 1, redstone);
 }
 
+void copyModule(int xsrc, int ysrc, int xdest, int ydest)
+{
+    int Xsrc = xsrc * 2;
+    int Ysrc = ysrc * 2;
+    int Xdest = xdest * 2;
+    int Ydest = ydest * 2;
+    cloneBlocks(Xsrc, -4, Ysrc, Xsrc + 1, 1, Ysrc + 1, Xdest, -4, Ydest);
+}
+
+int[] moduleLocationX;
+int[] moduleLocationY;
+
+void buildInput()
+{
+    fillBlocks(2, -2, 0, 2, -2, 1, block);
+    setBlock(2, -1, 0, repeater, 2);
+    setBlock(2, -1, 1, redstone);
+    int availableLanes = 1;
+    int leftToBuild = modules[0].length - 1;
+    int x = 1;
+    while(leftToBuild > 0)
+    {
+        int toCopy = min(availableLanes, leftToBuild);
+        int depth = toCopy * 2 - 1;
+        cloneBlocks(2, -2, 0, 2 + depth, -1, 1, x * 2 + 2, -2, 0);
+        availableLanes += toCopy;
+        leftToBuild -= toCopy;
+        x += toCopy;
+    }
+}
+
 void buildModules()
 {
+    moduleLocationX = new int[8];
+    moduleLocationY = new int[8];
     for(int y = 0; y < modules.length; y++)
     {
         for(int x = 0; x < modules[y].length; x++)
@@ -265,59 +313,91 @@ void buildModules()
             switch(module)
             {
                 case 0:
-                    buildModule0(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                        buildModule0(x + 1, y + 1);
+                    else
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
                     break;
                 case 1:
-                    buildModule1(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                        buildModule1(x + 1, y + 1);
+                    else
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
                     break;
                 case 2:
-                    buildModule2(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                        buildModule2(x + 1, y + 1);
+                    else
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
                     break;
                 case 3:
-                    buildModule3(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                    {
+                        buildModule3(x + 1, y + 1);
+                    }
+                    else
+                    {
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
+                        setBlock(x * 2 + 4, -3, y * 2 + 2, block);
+                    }
                     break;
                 case 4:
-                    buildModule4(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                        buildModule4(x + 1, y + 1);
+                    else
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
                     break;
                 case 5:
-                    buildModule5(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                        buildModule5(x + 1, y + 1);
+                    else
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
                     break;
                 case 6:
-                    buildModule6(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                        buildModule6(x + 1, y + 1);
+                    else
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
                     break;
                 case 7:
-                    buildModule7(x + 1, y + 1);
+                    if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+                        buildModule7(x + 1, y + 1);
+                    else
+                        copyModule(moduleLocationX[module], moduleLocationY[module],
+                                   x + 1, y + 1);
                     break;
+            }
+            if(moduleLocationX[module] == 0 && moduleLocationY[module] == 0)
+            {
+                moduleLocationX[module] = x + 1;
+                moduleLocationY[module] = y + 1;
             }
         }
         println("Built row " + (y + 1) + " of " + modules.length);
     }
-    for(int x = 0; x < modules[0].length; x++)
-    {
-        fillBlocks(x * 2 + 2, -2, 0, x * 2 + 2, -2, 1, block);
-        setBlock(x * 2 + 2, -1, 0, repeater, 2);
-        setBlock(x * 2 + 2, -1, 1, redstone);
-    }
+    buildInput();
 }
 
 void placeRepeaters()
 {
-    for(int y = 7; y < modules.length; y += 7)
+    // Input Lanes
+    for(int x = 0; x < modules[0].length; x++)
     {
-        for(int x = 0; x < modules[y].length; x++)
+        int X = x * 2 + 2;
+        for(int y = 7; y < modules.length; y += 7)
         {
             int module = modules[y][x];
-            if(module == 4 || module == 5) // Those modules are very hard to put a repeater on
-            {
+            if(module == 4 || module == 5)
                 y--;
-                break;
-            }
-        }
-        int Y = y * 2 + 2;
-        for(int x = 0; x < modules[y].length; x++)
-        {
-            int X = x * 2 + 2;
-            int module = modules[y][x];
+            module = modules[y][x];
+            int Y = y * 2 + 2;
             switch(module)
             {
                 case 0:
@@ -340,6 +420,7 @@ void placeRepeaters()
             }
         }
     }
+    // Output Lanes
     for(int x = 7; x < modules[0].length; x += 7)
     {
         int X = x * 2 + 2;
@@ -434,6 +515,48 @@ void fillBlocks(int x1, int y1, int z1, int x2, int y2, int z2, String block)
     }
     executeCommand("fill ~" + x1 + " ~" + y1 + " ~" + z1
         + " ~" + x2 + " ~" + y2 + " ~" + z2 + " " + block);
+}
+
+void cloneBlocks(int x1, int y1, int z1, int x2, int y2, int z2, int x, int y, int z)
+{
+    int width = abs(x2 - x1);
+    int height = abs(z2 - z1);
+    if(orientation == 1)
+    {
+        z1 = -z1;
+        x1 = -x1;
+        z2 = -z2;
+        x2 = -x2;
+        z = -z - height;
+        x = -x - width;
+    }
+    else if(orientation == 2)
+    {
+        int temp = x1;
+        x1 = z1;
+        z1 = -temp;
+        temp = x2;
+        x2 = z2;
+        z2 = -temp;
+        temp = x;
+        x = z;
+        z = -temp - width;
+    }
+    else if(orientation == 3)
+    {
+        int temp = x1;
+        x1 = -z1;
+        z1 = temp;
+        temp = x2;
+        x2 = -z2;
+        z2 = temp;
+        temp = x;
+        x = -z - height;
+        z = temp;
+    }
+    executeCommand("clone ~" + x1 + " ~" + y1 + " ~" + z1
+        + " ~" + x2 + " ~" + y2 + " ~" + z2
+        + " ~" + x  + " ~" + y  + " ~" + z + " masked");
 }
 
 void executeCommand(String command)
