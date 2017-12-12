@@ -1,6 +1,6 @@
 The Processing Dev Environment is in the ```decoder``` folder.
 
-Input files:
+Input syntax:
 ```
 1XX
 01X
