@@ -55,11 +55,13 @@ void fileSelected(File selection)
         println(countdown + "...");
         delay(1000);
     }
+    println("Building stated at " + hour() + ":" + minute() + "." + second());
     buildOutput();
     buildModules();
     println("Placing repeaters...");
     placeRepeaters();
     println("Done!");
+    println("Building finished at " + hour() + ":" + minute() + "." + second());
     exit();
 }
 
@@ -276,7 +278,20 @@ void copyModule(int xsrc, int ysrc, int xdest, int ydest)
     int Ysrc = ysrc * 2;
     int Xdest = xdest * 2;
     int Ydest = ydest * 2;
-    cloneBlocks(Xsrc, -4, Ysrc, Xsrc + 1, 1, Ysrc + 1, Xdest, -4, Ydest);
+    cloneBlocks(Xsrc, -4, Ysrc,
+                Xsrc + 1, 1, Ysrc + 1,
+                Xdest, -4, Ydest);
+}
+
+void copyModuleLine(int xsrc, int ysrc, int count, int xdest, int ydest)
+{
+    int Xsrc = xsrc * 2;
+    int Ysrc = ysrc * 2;
+    int Xdest = xdest * 2;
+    int Ydest = ydest * 2;
+    cloneBlocks(Xsrc, -4, Ysrc,
+                Xsrc + 2 * count + 1, 1, Ysrc + 1,
+                Xdest, -4, Ydest);
 }
 
 int[] moduleLocationX;
@@ -309,6 +324,31 @@ void buildModules()
     {
         for(int x = 0; x < modules[y].length; x++)
         {
+            int besty = 0;
+            int bestcount = 0;
+            for(int py = y - 1; py >= 0; py--)
+            {
+                if(modules[y][x] == modules[py][x])
+                {
+                    int px = x;
+                    for(; px < modules[y].length && modules[y][px] == modules[py][px]; px++);
+                    int count = px - x - 1;
+                    if(count > bestcount)
+                    {
+                        bestcount = count;
+                        besty = py;
+                    }
+                }
+            }
+            if(bestcount > 1)
+            {
+                copyModuleLine(x + 1, besty + 1, bestcount,
+                               x + 1, y + 1);
+                x += bestcount;
+                if(x >= modules[y].length)
+                    break;
+            }
+
             int module = modules[y][x];
             switch(module)
             {
