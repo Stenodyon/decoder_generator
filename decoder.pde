@@ -1,10 +1,25 @@
+/*
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    Written by Kevin Le Run (Stenodyon)
+*/
+
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.datatransfer.*;
 import javax.swing.*;
 import java.io.*;
-
-Robot robot;
 
 String block = "minecraft:iron_block";
 String redstone = "minecraft:redstone_wire";
@@ -12,7 +27,6 @@ String repeater = "minecraft:unpowered_repeater";
 String torch = "minecraft:redstone_torch";
 String air = "minecraft:air";
 
-int commandRate = 30;
 int orientation = 0;
 /*
 0 = south
@@ -21,16 +35,10 @@ int orientation = 0;
 3 = west
 */
 
-void setup() {
-    try
-    {
-        robot = new Robot();
-        robot.setAutoDelay(commandRate);
-    }
-    catch (Exception e)
-    {
-        e.printStackTrace();
-    }
+IExecuter executer;
+
+void setup()
+{
     size(0, 0);
     selectInput("Select a file to process:", "fileSelected");
 }
@@ -50,11 +58,8 @@ void fileSelected(File selection)
     println("File parsed");
     solveModules();
     println("Problems solved");
-    for(int countdown = 5; countdown > 0; countdown--)
-    {
-        println(countdown + "...");
-        delay(1000);
-    }
+    //executer = new FileExecuter("out.txt");
+    executer = new RobotExecuter();
     println("Building stated at " + hour() + ":" + minute() + "." + second());
     buildOutput();
     buildModules();
@@ -62,6 +67,7 @@ void fileSelected(File selection)
     placeRepeaters();
     println("Done!");
     println("Building finished at " + hour() + ":" + minute() + "." + second());
+    executer.close();
     exit();
 }
 
@@ -523,7 +529,7 @@ void setBlock(int x, int y, int z, String block, int dir)
     }
     if(isTorch)
         dir = torchDir[orientation][dir];
-    executeCommand("setblock ~" + x + " ~" + y + " ~" + z + " " + block + " " + dir);
+    executer.executeCommand("setblock ~" + x + " ~" + y + " ~" + z + " " + block + " " + dir);
 }
 
 void fillBlocks(int x1, int y1, int z1, int x2, int y2, int z2, String block)
@@ -553,7 +559,7 @@ void fillBlocks(int x1, int y1, int z1, int x2, int y2, int z2, String block)
         x2 = -z2;
         z2 = temp;
     }
-    executeCommand("fill ~" + x1 + " ~" + y1 + " ~" + z1
+    executer.executeCommand("fill ~" + x1 + " ~" + y1 + " ~" + z1
         + " ~" + x2 + " ~" + y2 + " ~" + z2 + " " + block);
 }
 
@@ -594,40 +600,8 @@ void cloneBlocks(int x1, int y1, int z1, int x2, int y2, int z2, int x, int y, i
         x = -z - height;
         z = temp;
     }
-    executeCommand("clone ~" + x1 + " ~" + y1 + " ~" + z1
+    executer.executeCommand("clone ~" + x1 + " ~" + y1 + " ~" + z1
         + " ~" + x2 + " ~" + y2 + " ~" + z2
         + " ~" + x  + " ~" + y  + " ~" + z + " masked");
 }
 
-void executeCommand(String command)
-{
-    robot.keyPress('\n');
-    robot.keyRelease('\n');
-    robot.keyPress('/');
-    robot.keyRelease('/');
-    typeString(command);
-    robot.keyPress('\n');
-    robot.keyRelease('\n');
-}
-
-void typeString(String text)
-{
-    robot.setAutoDelay(1);
-    for(int i = 0; i < text.length(); i++)
-    {
-        int c = text.charAt(i);
-        if(Character.isUpperCase(c) || c == '~' || c == ':' || c == '_')
-        {
-            robot.keyPress(java.awt.event.KeyEvent.VK_SHIFT);
-        }
-        int keyCode = java.awt.event.KeyEvent.getExtendedKeyCodeForChar(c);
-        if(c == '~') keyCode = java.awt.event.KeyEvent.VK_BACK_QUOTE;
-        robot.keyPress(keyCode);
-        robot.keyRelease(keyCode);
-        if(Character.isUpperCase(c) || c == '~' || c == ':' || c == '_')
-        {
-            robot.keyRelease(java.awt.event.KeyEvent.VK_SHIFT);
-        }
-    }
-    robot.setAutoDelay(commandRate);
-}
